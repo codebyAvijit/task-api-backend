@@ -8,11 +8,11 @@ const bodyparser = require("body-parser");
 router.get("/", (req, res) => {
   res.status(200).json({
     status: "Success",
-    message: "Welcome to Task API.",
+    message: "Welcome",
   });
 });
 
-router.post("/v1/tasks", async (req, res) => {
+router.post("/v1/create", async (req, res) => {
   try {
     if (req.body.tasks) {
       let tasks = await Task.insertMany(req.body.tasks);
@@ -34,7 +34,7 @@ router.post("/v1/tasks", async (req, res) => {
     });
   }
 });
-router.get("/v1/tasks", async (req, res) => {
+router.get("/v1/all", async (req, res) => {
   try {
     let tasks = await Task.find();
     res.status(200).json({
@@ -47,7 +47,7 @@ router.get("/v1/tasks", async (req, res) => {
   }
 });
 
-router.get("/v1/tasks/:id", async (req, res) => {
+router.get("/v1/single/:id", async (req, res) => {
   try {
     let task = await Task.find({ _id: req.params.id });
     res.status(200).json({
@@ -60,7 +60,7 @@ router.get("/v1/tasks/:id", async (req, res) => {
   }
 });
 
-router.delete("/v1/tasks/:id", async (req, res) => {
+router.delete("/v1/delete/:id", async (req, res) => {
   try {
     let task = await Task.findByIdAndDelete({ _id: req.params.id });
     res.status(204).json({
@@ -72,13 +72,14 @@ router.delete("/v1/tasks/:id", async (req, res) => {
     });
   }
 });
-router.put("/v1/tasks/:id", async (req, res) => {
+router.put("/v1/edit/:id", async (req, res) => {
   try {
     let task = await Task.updateOne(
-      { id: req.params.id },
-      { $set: { title: req.body.title, is_completed: req.body.is_completed } }
+      { _id: req.params.id },
+      { $set: req.body },
+      { new: true }
     );
-    res.status(204).json({});
+    res.status(200).json({ task });
   } catch (error) {
     res.status(404).json({
       error: "There is no task at that id",
@@ -86,13 +87,14 @@ router.put("/v1/tasks/:id", async (req, res) => {
   }
 });
 
-router.delete("/v1/tasks", async (req, res) => {
+router.delete("/v1/deletemany", async (req, res) => {
   try {
+    let ids = [];
     let deletingIds = req.body.tasks.map((obj) => {
-      return obj.id;
+      ids.push(obj.id);
     });
-    console.log(deletingIds);
-    let tasks = await Task.deleteMany({ _id: { $in: deletingIds } });
+    // console.log(deletingIds);
+    let tasks = await Task.deleteMany({ _id: { $in: ids } });
     res.status(204).json({
       status: "Success",
       message: "Tasks deleted successfully",
